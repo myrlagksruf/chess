@@ -1,0 +1,21 @@
+{
+  "name": "20210325chess",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently \"tsc -w\" \"nodemon ./dist/index.js\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.0.0",
+    "ts-loader": "^8.0.18"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/socket.io-client": "^1.4.36"
+  }
+}

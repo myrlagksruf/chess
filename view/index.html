@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            margin: 0;
+            line-height: 0;
+        }
+        #container > div > div{
+            display: inline-block;
+            height: 80px;
+            width: 80px;
+        }
+        .x0{
+            background-color: brown;
+        }
+        .x1{
+            background-color: beige;
+        }
+        .chess, .active::before{
+            position: relative;
+            background-image: url("./img/Chess_Pieces_Sprite.svg");
+            height: 100%;
+            background-size: auto 160px;
+            background-repeat: no-repeat;
+            z-index: 100;
+        }
+        .sel{
+            filter: invert(1);
+        }
+        .active::before{
+            display: block;
+            content: '';
+            box-sizing: border-box;
+            background-repeat: no-repeat;
+            width:100%;
+            height: 100%;
+            padding:10px;
+            /* box-shadow: 0 0 5px 0 #4B89DC; */
+            background-clip: content-box;
+            border-radius: 50%;
+            background-color: rgba(128, 128, 128, 0.7);
+            z-index:-1;
+        }
+        [data-piece="e"], [data-piece="e"]::before{
+            background-position-x: 80px;
+        }
+        [data-piece="k"], [data-piece="k"]::before, [data-piece="K"], [data-piece="K"]::before{
+            background-position-x: 0;
+        }
+        [data-piece="q"], [data-piece="q"]::before, [data-piece="Q"], [data-piece="Q"]::before{
+            background-position-x: -80px;
+        }
+        [data-piece="b"], [data-piece="b"]::before, [data-piece="B"], [data-piece="B"]::before{
+            background-position-x: -160px;
+        }
+        [data-piece="n"], [data-piece="n"]::before, [data-piece="N"], [data-piece="N"]::before{
+            background-position-x: -240px;
+        }
+        [data-piece="r"], [data-piece="r"]::before, [data-piece="R"], [data-piece="R"]::before{
+            background-position-x: -320px;
+        }
+        [data-piece="p"], [data-piece="p"]::before, [data-piece="P"], [data-piece="P"]::before{
+            background-position-x: -400px;
+        }
+        [data-piece="K"], [data-piece="K"]::before, [data-piece="Q"], [data-piece="Q"]::before, [data-piece="B"], [data-piece="B"]::before, [data-piece="N"], [data-piece="N"]::before, [data-piece="R"], [data-piece="R"]::before, [data-piece="P"], [data-piece="P"]::before{
+            background-position-y: 0;
+        }
+        [data-piece="k"], [data-piece="k"]::before, [data-piece="q"], [data-piece="q"]::before, [data-piece="b"], [data-piece="b"]::before, [data-piece="n"], [data-piece="n"]::before, [data-piece="r"], [data-piece="r"]::before, [data-piece="p"], [data-piece="p"]::before{
+            background-position-y: -80px;
+        }
+    </style>
+</head>
+<body>
+    <h1><span>기다리는 중입니다.</span><span></span></h1>
+    <div id="container"></div>
+    <audio id="tac" src="./img/tac.mp3"></audio>
+    <audio id="coin" src="./img/coin.mp3"></audio>
+    <script src="/node_modules/socket.io/client-dist/socket.io.min.js"></script>
+    <script type="module" src="/public/js/main.js"></script>
+</body>
+</html>
