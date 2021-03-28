@@ -22,6 +22,15 @@ const getPos = (pos:string, type:string) => {
     }
     return pos;
 };
+const isWin = (eat:string) => {
+    if(eat === 'b' || eat === 'w'){
+        if(cur.player === eat){
+            socket.emit('win');
+        } else {
+            socket.emit('lose');
+        }
+    }
+};
 container.addEventListener('click', e => {
     const tar = e.target as HTMLDivElement;
     const par = e.currentTarget as HTMLDivElement;
@@ -32,13 +41,15 @@ container.addEventListener('click', e => {
             if (tar !== sel && tar.classList.contains('active') && sel.dataset.pos) {
                 const posStart = getPos(sel.dataset.pos, cur.player);
                 const posEnd = getPos(tar.dataset.pos, cur.player);
-                if (cur.movePiece(posStart, posEnd)) {
+                const eat = cur.movePiece(posStart, posEnd);
+                if (!eat) {
                     coin.play();
                 }
                 else {
                     tac.play();
                 }
-                socket.emit('tac', cur.str);
+                socket.emit('tac', {str: cur.str, eat});
+                isWin(eat);
                 cur.renderAll();
             }
             document.querySelectorAll('div.active').forEach((v) => v.classList.remove('active'));
@@ -72,7 +83,11 @@ socket.on('close', (e:string) => {
     s1.innerHTML = e;
     wait = false;
 });
-socket.on('tac', (e:string) => {
-    Object.assign(cur, Chess.fenToData(e));
+socket.on('tac', e => {
+    Object.assign(cur, Chess.fenToData(e.str));
+    isWin(e.eat);
     cur.renderAll();
+});
+socket.on('message', e => {
+    alert(e);
 });

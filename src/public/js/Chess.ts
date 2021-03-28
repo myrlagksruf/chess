@@ -279,19 +279,24 @@ export class Chess implements ChessInter {
     isCheck(x:number, y:number) {
         return false;
     }
+    isWin(eat:string):string{
+        if(eat === 'k') return 'w';
+        else if(eat === 'K') return 'b';
+        else return eat;
+    }
     movePiece(posStart:string, posEnd:string) {
         let flag = 1;
         const [x1, y1] = Chess.getPos(posStart);
         const [x2, y2] = Chess.getPos(posEnd);
         const p = this.getPiece(x1, y1);
         let pasang = '-';
-        let eat = false;
+        let eat = '';
         if (!p.v.search(Chess.whiteReg))
             flag = -1;
         if (!p.v.search(/p/i)) {
             if (this.pasang === posEnd) { //앙파상
                 this.changePiece(x2, y2 - flag, 'e');
-                eat = true;
+                eat = p.v;
             }
             else if (Math.abs(y2 - y1) === 2) { //두 번 움직인 경우 앙파상 기능 활성화
                 pasang = Chess.getAxis(x2, y2, 8, -flag);
@@ -311,8 +316,9 @@ export class Chess implements ChessInter {
         else if (!p.v.search(/r/i)) { //룩 캐슬링 없애기
             this.castle = this.castle.replace(Chess.castleCheck(posStart), '');
         }
-        if (this.getPiece(x2, y2).v !== 'e')
-            eat = true;
+        const a = this.getPiece(x2, y2);
+        if (a.v !== 'e')
+            eat = a.v;
         this.changePiece(x2, y2, p.v);
         this.changePiece(x1, y1, 'e');
         if (this.move === 'b')
@@ -321,6 +327,6 @@ export class Chess implements ChessInter {
             this.move = 'b';
         this.pasang = pasang;
         this.str = Chess.dataToFen(this);
-        return eat;
+        return this.isWin(eat);
     }
 }

@@ -33,6 +33,12 @@ io.on('connection', socket => {
         const room = map.get(id);
         socket.to(room).emit('tac', e);
     });
+    socket.on('win', e => {
+        socket.emit('message', '승리하셨습니다.');
+    });
+    socket.on('lose', e => {
+        socket.emit('message', '패배하셨습니다.');
+    });
     socket.on('disconnect', e => {
         const room = map.get(id);
         map.delete(id);
