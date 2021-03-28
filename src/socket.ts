@@ -42,61 +42,93 @@ io.on('connection', socket => {
     socket.on('make', e => {
         const j = crypto.createHash('sha256').update(e).digest('base64');
         const room = rooms.get(j);
+        map.set(id, j);
         map.set(j, e);
         if(!room || room.size === 0){
             socket.join(j);
             socket.join('w');
-            socket.emit('main', {player:'w', room:j, ori:e});
+            socket.emit('start', {player:'w', room:j, ori:e});
             socket.broadcast.emit('set', [{room:j, ori:e, size:1}]);
         } else {
             socket.emit('message', '이미 있는 방입니다.');
         }
-    })
+    });
+
     socket.on('room', j => {
         const room = rooms.get(j);
+        if(!room){
+            socket.emit('message', '방이 이미 없습니다. 새로고침 해주세요.');
+            return;
+        }
+        map.set(id, j);
         const e = map.get(j);
         let player = 'o';
-        console.log(e, j);  
+        let other = null;
         if(!room){
             player = 'w';
         } else if(room.size === 1){
             const s = [...room][0];
-            const other = io.of('/').sockets.get(s).rooms;
-            console.log(other);
+            other = io.of('/').sockets.get(s).rooms;
             if(other.has('w')){
                 player = 'b';
             } else {
                 player = 'w';
             }
+        } else {
+
         }
-        console.log(player);
         socket.join(player);
         socket.join(j);
         socket.emit('main', {player, room:j, ori:e});
+        let otherStr = 'o';
+        if(player === 'w'){
+            otherStr = 'b';
+        } else if(player === 'b'){
+            otherStr = 'w';
+        }
+        socket.to(j).emit('main', {player: otherStr, room:j, ori:e});
         socket.broadcast.emit('set', [{room:j, ori:e, size:room.size}]);
     });
     socket.on('win', e => {
         socket.emit('message', '승리하셨습니다.');
+        for(let i of socket.rooms){
+            socket.leave(i);
+            map.delete(i);
+            socket.broadcast.emit('delete', i);
+        }
         socket.disconnect();
     });
     socket.on('lose', e => {
         socket.emit('message', '패배하셨습니다.');
+        for(let i of socket.rooms){
+            socket.leave(i);
+            map.delete(i);
+            socket.broadcast.emit('delete', i);
+        }
         socket.disconnect();
     });
     socket.on('tac', e => {
-        socket.to([...socket.rooms][1]).emit('tac', e);
-    });
-    socket.on('disconnect', e => {
-        const sss = rooms.get(id);
-        if(sss){
-            for(let i of sss){
-                if(i.length === 44){
-                    socket.to(i).emit('close', '상대방이 게임을 나갔습니다.');
-                    map.delete(i);
-                    socket.disconnect();
-                    break;
-                }
+        let room = '';
+        for(let i of socket.rooms){
+            if(i.length === 44){
+                room = i;
+                break;
             }
         }
+        socket.to(room).emit('tac', e);
+    });
+    socket.on('disconnect', e => {
+        const room = map.get(id);
+        map.delete(id);
+        const xxx = rooms.get(room);
+        socket.to(room).emit('close', '상대방이 게임을 나갔습니다.');
+        socket.broadcast.emit('delete', room);
+        if(xxx){
+            for(let i of xxx){
+                io.of('/').sockets.get(i).disconnect();
+                map.delete(i);
+            }
+        }
+        map.delete(room);
     });
 });

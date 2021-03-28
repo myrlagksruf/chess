@@ -26,8 +26,8 @@ const getPos = (pos:string, type:string) => {
     return pos;
 };
 const isWin = (eat:string) => {
-    if(eat === 'b' || eat === 'w'){
-        if(cur.player === eat){
+    if(eat === 'black' || eat === 'white'){
+        if(cur.player === eat[0]){
             socket.emit('win');
         } else {
             socket.emit('lose');
@@ -102,18 +102,32 @@ const makeTd = (tr:HTMLTableRowElement, obj) => {
 const socket = io(location.origin);
 const s1 = document.querySelector('h1 > span:nth-child(1)') as HTMLSpanElement;
 const s2 = document.querySelector('h1 > span:nth-child(2)') as HTMLSpanElement;
-socket.on('main', e => {
-    s2.innerHTML = e.room;
-    cur.player = e.player;
+const setting = (obj, str) => {
+    s2.innerHTML = `, 방이름 : ${obj.ori}`;
+    if(!cur.player) cur.player = obj.player;
     menu.classList.add('room');
-    s1.innerHTML = '게임 시작!';
-    wait = true;
+    s1.innerHTML = str;
     cur.renderAll();
+};
+socket.on('delete', e => {
+    document.querySelector(`tr[data-id="${e}"]`)?.remove();
+});
+socket.on('start', e => {
+    setting(e, '기다리는 중');
+})
+socket.on('main', e => {
+    let mes = '게임 시작';
+    setting(e, mes);
+    if(cur.player === 'o'){
+        s1.innerHTML = '관전 시작';
+    }
+    wait = true;
 });
 socket.on('close', (e:string) => {
     s1.innerHTML = e;
     wait = false;
 });
+
 socket.on('set', e => {
     for(let i of e){
         let A:HTMLTableRowElement = tbody.querySelector(`tr[data-id="${i.room}"]`);

@@ -280,8 +280,8 @@ export class Chess implements ChessInter {
         return false;
     }
     isWin(eat:string):string{
-        if(eat === 'k') return 'w';
-        else if(eat === 'K') return 'b';
+        if(eat === 'k') return 'white';
+        else if(eat === 'K') return 'black';
         else return eat;
     }
     movePiece(posStart:string, posEnd:string) {
