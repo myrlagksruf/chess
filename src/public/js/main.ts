@@ -1,7 +1,10 @@
 import { Chess } from './Chess.js';
+const tbody = document.querySelector('tbody') as HTMLTableSectionElement;
 const container = document.querySelector('#container') as HTMLDivElement;
+const menu = document.querySelector('#menu') as HTMLDivElement;
 const tac = document.querySelector('#tac') as HTMLAudioElement;
 const coin = document.querySelector('#coin') as HTMLAudioElement;
+const newButton = document.querySelector('#menu button') as HTMLButtonElement;
 const cur = new Chess('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 let wait = false;
 for (let i = 0; i < 8; i++) {
@@ -31,6 +34,21 @@ const isWin = (eat:string) => {
         }
     }
 };
+
+newButton.addEventListener('click', e => {
+    const str = prompt('방이름을 써주세요.');
+    if(str){
+        socket.emit('make', str);
+    }
+});
+tbody.addEventListener('click', e => {
+    const tar = e.target as HTMLButtonElement;
+    if(tar.nodeName === 'BUTTON'){
+        const par = tar.parentElement.parentElement as HTMLTableRowElement;
+        const id = par.dataset.id;
+        socket.emit('room', id);
+    }
+});
 container.addEventListener('click', e => {
     const tar = e.target as HTMLDivElement;
     const par = e.currentTarget as HTMLDivElement;
@@ -42,7 +60,8 @@ container.addEventListener('click', e => {
                 const posStart = getPos(sel.dataset.pos, cur.player);
                 const posEnd = getPos(tar.dataset.pos, cur.player);
                 const eat = cur.movePiece(posStart, posEnd);
-                if (!eat) {
+                console.log(eat);
+                if (eat) {
                     coin.play();
                 }
                 else {
@@ -67,25 +86,54 @@ container.addEventListener('click', e => {
         }
     }
 });
+const makeTd = (tr:HTMLTableRowElement, obj) => {
+    tr.dataset.id = obj.room;
+    tr.innerHTML = '';
+    const td1 = document.createElement('td');
+    td1.innerHTML = obj.ori;
+    tr.appendChild(td1);
+    const td2 = document.createElement('td');
+    td2.innerHTML = obj.size;
+    tr.appendChild(td2);
+    const td3 = document.createElement('td');
+    td3.innerHTML = `<button>방 입장</button>`;
+    tr.appendChild(td3);
+};
 const socket = io(location.origin);
 const s1 = document.querySelector('h1 > span:nth-child(1)') as HTMLSpanElement;
 const s2 = document.querySelector('h1 > span:nth-child(2)') as HTMLSpanElement;
-socket.on('first', e => {
+socket.on('main', e => {
     s2.innerHTML = e.room;
     cur.player = e.player;
-    cur.renderAll();
-});
-socket.on('start', (e:string) => {
-    s1.innerHTML = e;
+    menu.classList.add('room');
+    s1.innerHTML = '게임 시작!';
     wait = true;
+    cur.renderAll();
 });
 socket.on('close', (e:string) => {
     s1.innerHTML = e;
     wait = false;
 });
+socket.on('set', e => {
+    for(let i of e){
+        let A:HTMLTableRowElement = tbody.querySelector(`tr[data-id="${i.room}"]`);
+        if(!A){
+            A = document.createElement('tr');
+            A.dataset.id = i.room;
+            tbody.appendChild(A);
+        }
+        makeTd(A, i);
+    }
+});
 socket.on('tac', e => {
     Object.assign(cur, Chess.fenToData(e.str));
     isWin(e.eat);
+    if (e.eat) {
+        coin.play();
+    }
+    else {
+        tac.play();
+    }
     cur.renderAll();
 });
 socket.on('message', e => {

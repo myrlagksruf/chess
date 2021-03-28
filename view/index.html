@@ -15,6 +15,15 @@
             height: 80px;
             width: 80px;
         }
+        #menu.room{
+            display: none;
+        }
+        #menu.room ~ #main{
+            display: block;
+        }
+        #main{
+            display: none;
+        }
         .x0{
             background-color: brown;
         }
@@ -76,8 +85,23 @@
     </style>
 </head>
 <body>
-    <h1><span>기다리는 중입니다.</span><span></span></h1>
-    <div id="container"></div>
+    <div id="menu">
+        <button>방 새로 만들기</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>방이름</th>
+                    <th>게임 상태</th>
+                    <th>들어가기</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="main">
+        <h1><span>기다리는 중입니다.</span><span></span></h1>
+        <div id="container"></div>
+    </div>
     <audio id="tac" src="./img/tac.mp3"></audio>
     <audio id="coin" src="./img/coin.mp3"></audio>
     <script src="/node_modules/socket.io/client-dist/socket.io.min.js"></script>
