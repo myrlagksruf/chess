@@ -52,8 +52,8 @@ const roomOut = (socket:Socket, rooms:Map<string, Set<string>>, reason) => {
             const room = whatRooms(rooms, 44, j)[0];
             socket.leave(j);
             socket.emit('close', '방을 나갔습니다.');
-            socket.emit('set', [{room:j, ori, size:room.size}]);
-            socket.broadcast.emit('set', [{room:j, ori, size:room.size}]);
+            socket.emit('set', [{room:j, ori, size:room.size - 1}]);
+            socket.broadcast.emit('set', [{room:j, ori, size:room.size - 1}]);
         }
         
     }
@@ -101,7 +101,11 @@ io.on('connection', socket => {
             socket.emit('message', '이미 있는 방입니다.');
         }
     });
-
+    socket.on('active', e => {
+        const room = whatRoom(socket.rooms);
+        socket.emit(e.type, e);
+        socket.to(room).emit(e.type, e);
+    });
     socket.on('room', j => {
         const room = whatRooms(rooms, 44, j)[0];
         if(!room){
@@ -130,6 +134,15 @@ io.on('connection', socket => {
             otherStr = 'b';
         } else if(player === 'b'){
             otherStr = 'w';
+        } else {
+            const others = whatRooms(rooms, 44, j)[0];
+            for(let i of others.set){
+                const other = io.of('/').sockets.get(i);
+                const player = whatRoom(other.rooms, 1);
+                if(player === 'w' || player === 'b'){
+                    other.emit('get');
+                }
+            }
         }
         socket.to(j).emit('main', {player: otherStr, room:j, ori:e});
         socket.broadcast.emit('set', [{room:j, ori:e, size:room.size + 1}]);

@@ -75,18 +75,22 @@ container.addEventListener('click', e => {
                 isWin(eat);
                 cur.renderAll();
             }
-            document.querySelectorAll('div.active').forEach((v) => v.classList.remove('active'));
-            sel.classList.remove('sel');
-            par.classList.remove('pick');
+            const obj = {
+                type:'deactive'
+            };
+            socket.emit('active', obj);
         }
         else {
-            const set = cur.moveGenerator(getPos(tar.dataset.pos, cur.player));
-            for (let i of set) {
-                const temp = document.querySelector(`[data-pos="${getPos(i, cur.player)}"]`) as HTMLDivElement;
-                temp.classList.add('active');
-            }
-            par.classList.add('pick');
-            tar.classList.add('sel');
+            const set = Array.from(cur.moveGenerator(getPos(tar.dataset.pos, cur.player)));
+            const obj = {
+                set,
+                player:cur.player,
+                tar:tar.dataset.pos,
+                par:'#container',
+                type:'active'
+            };
+            console.log(cur.player);
+            socket.emit('active', obj);
         }
     }
 });
@@ -111,20 +115,51 @@ const setting = (obj, str) => {
     if(!cur.player) cur.player = obj.player;
     menu.classList.add('room');
     s1.innerHTML = str;
+    reset();
     cur.renderAll();
 };
 const close = e => {
     s1.innerHTML = e;
     s2.innerHTML = ``;
+    cur.player = '';
     menu.classList.remove('room');
 };
+const reset = () => {
+    document.querySelectorAll('div.active').forEach((v) => v.classList.remove('active'));
+    const sel = document.querySelector('.sel');
+    const par = document.querySelector('.pick');
+    if(sel) sel.classList.remove('sel');
+    if(par) par.classList.remove('pick');
+}
 
+socket.on('active', e => {
+    const { set, par, tar, player } = e;
+    for (let i of set) {
+        const temp = document.querySelector(`[data-pos="${getPos(i, cur.player)}"]`) as HTMLDivElement;
+        temp.classList.add('active');
+    }
+    document.querySelector(par).classList.add('pick');
+    console.log(cur.player);
+    let way = 'b';
+    if(cur.player === 'o'){
+        way = player;
+    } else if(cur.player === player){
+        way = 'w';
+    } else {
+        way = 'b';
+    }
+    document.querySelector(`[data-pos="${getPos(tar, way)}"]`).classList.add('sel');
+});
+socket.on('deactive', reset);
 socket.on('delete', e => {
     document.querySelector(`tr[data-id="${e}"]`)?.remove();
 });
 socket.on('start', e => {
     setting(e, '기다리는 중');
-})
+});
+socket.on('get', e => {
+    socket.emit('tac', {str:cur.str, eat:''});
+});
 socket.on('main', e => {
     let mes = '게임 시작';
     setting(e, mes);
