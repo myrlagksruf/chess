@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"tsc -w\" \"nodemon ./dist/index.js\""
+    "start-w": "concurrently \"tsc -w\" \"nodemon ./dist/index.js\"",
+    "start": "sudo concurrently \"sudo tsc -w\" \"sudo nodemon ./dist/index.js\""
   },
   "author": "",
   "license": "ISC",
