@@ -207,6 +207,4 @@ const fulltoggle = e => {
     document.body.classList.toggle('full');
 };
 
-window.addEventListener('contextmenu', fulltoggle);
-
 window.addEventListener('dblclick', fulltoggle);
