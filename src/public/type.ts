@@ -17,3 +17,10 @@ export interface Pieces{
     ori: [number, number, number, number];
     end: [number, number];
 }
+
+export interface Rooms{
+    room:string;
+    ori:string;
+    set:Set<string>;
+    size:number;
+};

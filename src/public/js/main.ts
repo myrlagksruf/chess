@@ -5,6 +5,7 @@ const menu = document.querySelector('#menu') as HTMLDivElement;
 const tac = document.querySelector('#tac') as HTMLAudioElement;
 const coin = document.querySelector('#coin') as HTMLAudioElement;
 const newButton = document.querySelector('#menu button') as HTMLButtonElement;
+const out = document.querySelector('#out') as HTMLButtonElement;
 const cur = new Chess('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 let wait = false;
 for (let i = 0; i < 8; i++) {
@@ -35,6 +36,9 @@ const isWin = (eat:string) => {
     }
 };
 
+out.addEventListener('click', e => {
+    socket.emit('close', {player:cur.player, mes:'상대방이 방에서 나갔습니다.'});
+});
 newButton.addEventListener('click', e => {
     const str = prompt('방이름을 써주세요.');
     if(str){
@@ -109,6 +113,12 @@ const setting = (obj, str) => {
     s1.innerHTML = str;
     cur.renderAll();
 };
+const close = e => {
+    s1.innerHTML = e;
+    s2.innerHTML = ``;
+    menu.classList.remove('room');
+};
+
 socket.on('delete', e => {
     document.querySelector(`tr[data-id="${e}"]`)?.remove();
 });
@@ -124,7 +134,7 @@ socket.on('main', e => {
     wait = true;
 });
 socket.on('close', (e:string) => {
-    s1.innerHTML = e;
+    close(e);
     wait = false;
 });
 

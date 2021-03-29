@@ -1,9 +1,64 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import express from 'express';
 import crypto from 'crypto';
+import { Rooms } from './public/type.js';
 export const app = express();
 const io = new Server(app.listen(5000));
 const map = new Map();
+
+const whatRoom = (set:Set<string>, type:number = 44):string => {
+    for(let i of set){
+        if(i.length === type) return i;
+    }
+    return '';
+};
+
+const whatRooms = (m:Map<string,Set<string>>, type:number = 44, find:string = ''):Rooms[] => {
+    const arr:Rooms[] = [];
+    if(find){
+        for(let [room, set] of Array.from(m)){
+            if(room.length === type && find === room) {
+                arr.push({room, ori:map.get(room), set, size:set.size});
+                break;
+            }
+        }
+    } else {
+        for(let [room, set] of Array.from(m)){
+            if(room.length === type)
+                arr.push({room, ori:map.get(room), set, size:set.size});
+        }
+    }
+    return arr;
+};
+
+const roomOut = (socket:Socket, rooms:Map<string, Set<string>>, reason) => {
+    const j = whatRoom(socket.rooms);
+    const allMembers = rooms.get(j);
+    if(allMembers){
+        if(reason.player === 'w' || reason.player === 'b'){
+            for(let i of allMembers){
+                const other = io.of('/').sockets.get(i);
+                other.leave(j);
+                if(i !== socket.id)
+                    other.emit('close', reason.mes);
+                else
+                    other.emit('close', '방을 나갔습니다.');
+            }
+            socket.emit('delete', j);
+            socket.broadcast.emit('delete', j);
+            map.delete(j);
+        } else {
+            const ori = map.get(j);
+            const room = whatRooms(rooms, 44, j)[0];
+            socket.leave(j);
+            socket.emit('close', '방을 나갔습니다.');
+            socket.emit('set', [{room:j, ori, size:room.size}]);
+            socket.broadcast.emit('set', [{room:j, ori, size:room.size}]);
+        }
+        
+    }
+};
+
 io.on('connection', socket => { 
     const rooms = io.of('/').adapter.rooms;
     const id = [...socket.rooms][0];
@@ -31,20 +86,13 @@ io.on('connection', socket => {
     // } else {
     //     socket.emit('first', { room: r, player:'w'});
     // }
-    
-    const arr = [];
-    for(let [room, set] of rooms){
-        if(room.length === 44){
-            arr.push({room, ori:map.get(room), size:set.size});
-        }
-    }
+    const arr = whatRooms(rooms);
     socket.emit('set', arr);
     socket.on('make', e => {
         const j = crypto.createHash('sha256').update(e).digest('base64');
-        const room = rooms.get(j);
-        map.set(id, j);
-        map.set(j, e);
+        const room = whatRooms(rooms, 44, j)[0];
         if(!room || room.size === 0){
+            map.set(j, e);
             socket.join(j);
             socket.join('w');
             socket.emit('start', {player:'w', room:j, ori:e});
@@ -55,27 +103,24 @@ io.on('connection', socket => {
     });
 
     socket.on('room', j => {
-        const room = rooms.get(j);
+        const room = whatRooms(rooms, 44, j)[0];
         if(!room){
             socket.emit('message', '방이 이미 없습니다. 새로고침 해주세요.');
             return;
         }
-        map.set(id, j);
         const e = map.get(j);
         let player = 'o';
         let other = null;
         if(!room){
             player = 'w';
         } else if(room.size === 1){
-            const s = [...room][0];
+            const s = [...room.set][0];
             other = io.of('/').sockets.get(s).rooms;
             if(other.has('w')){
                 player = 'b';
             } else {
                 player = 'w';
             }
-        } else {
-
         }
         socket.join(player);
         socket.join(j);
@@ -87,23 +132,23 @@ io.on('connection', socket => {
             otherStr = 'w';
         }
         socket.to(j).emit('main', {player: otherStr, room:j, ori:e});
-        socket.broadcast.emit('set', [{room:j, ori:e, size:room.size}]);
+        socket.broadcast.emit('set', [{room:j, ori:e, size:room.size + 1}]);
     });
     socket.on('win', e => {
         socket.emit('message', '승리하셨습니다.');
-        for(let i of socket.rooms){
-            socket.leave(i);
-            map.delete(i);
-            socket.broadcast.emit('delete', i);
+        for(let j of socket.rooms){
+            socket.leave(j);
+            map.delete(j);
+            socket.broadcast.emit('delete', j);
         }
         socket.disconnect();
     });
     socket.on('lose', e => {
         socket.emit('message', '패배하셨습니다.');
-        for(let i of socket.rooms){
-            socket.leave(i);
-            map.delete(i);
-            socket.broadcast.emit('delete', i);
+        for(let j of socket.rooms){
+            socket.leave(j);
+            map.delete(j);
+            socket.broadcast.emit('delete', j);
         }
         socket.disconnect();
     });
@@ -117,18 +162,28 @@ io.on('connection', socket => {
         }
         socket.to(room).emit('tac', e);
     });
-    socket.on('disconnect', e => {
-        const room = map.get(id);
-        map.delete(id);
-        const xxx = rooms.get(room);
-        socket.to(room).emit('close', '상대방이 게임을 나갔습니다.');
-        socket.broadcast.emit('delete', room);
-        if(xxx){
-            for(let i of xxx){
-                io.of('/').sockets.get(i).disconnect();
-                map.delete(i);
-            }
-        }
-        map.delete(room);
+
+    socket.on('close', e => {
+        roomOut(socket, rooms, e);
     });
+
+    socket.on('disconnecting', e => {
+        const player = whatRoom(socket.rooms, 1);
+        console.log(player);
+        roomOut(socket, rooms, {player, mes:'상대방의 인터넷이 끊겼습니다.'});
+    });
+    // socket.on('disconnect', e => {
+    //     const room = map.get(id);
+    //     map.delete(id);
+    //     const xxx = rooms.get(room);
+    //     socket.to(room).emit('close', '상대방이 게임을 나갔습니다.');
+    //     socket.broadcast.emit('delete', room);
+    //     if(xxx){
+    //         for(let i of xxx){
+    //             io.of('/').sockets.get(i).disconnect();
+    //             map.delete(i);
+    //         }
+    //     }
+    //     map.delete(room);
+    // });
 });
