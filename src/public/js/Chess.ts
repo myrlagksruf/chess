@@ -99,6 +99,10 @@ export class Chess implements ChessInter {
         }
         return `${String.fromCharCode(total % 8 + 97)}${8 - Math.floor(total / 8)}`;
     }
+    set fen(str:string){
+        const obj = Chess.fenToData(str);
+        Object.assign(this, obj);
+    }
     changePiece(x:number, y:number, str:string) {
         this.arr[y][x] = str;
     }

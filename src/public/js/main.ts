@@ -6,7 +6,8 @@ const tac = document.querySelector('#tac') as HTMLAudioElement;
 const coin = document.querySelector('#coin') as HTMLAudioElement;
 const newButton = document.querySelector('#menu button') as HTMLButtonElement;
 const out = document.querySelector('#out') as HTMLButtonElement;
-const cur = new Chess('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+const first = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const cur = new Chess(first);
 let wait = false;
 for (let i = 0; i < 8; i++) {
     const div2 = document.createElement('div');
@@ -116,6 +117,7 @@ const setting = (obj, str) => {
     menu.classList.add('room');
     s1.innerHTML = str;
     reset();
+    cur.fen = first;
     cur.renderAll();
 };
 const close = e => {
@@ -185,7 +187,7 @@ socket.on('set', e => {
     }
 });
 socket.on('tac', e => {
-    Object.assign(cur, Chess.fenToData(e.str));
+    cur.fen = e.str;
     isWin(e.eat);
     if (e.eat) {
         coin.play();
@@ -198,3 +200,13 @@ socket.on('tac', e => {
 socket.on('message', e => {
     alert(e);
 });
+
+const fulltoggle = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    document.body.classList.toggle('full');
+};
+
+window.addEventListener('contextmenu', fulltoggle);
+
+window.addEventListener('dblclick', fulltoggle);

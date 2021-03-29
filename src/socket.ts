@@ -151,19 +151,19 @@ io.on('connection', socket => {
         socket.emit('message', '승리하셨습니다.');
         for(let j of socket.rooms){
             socket.leave(j);
+            socket.emit('close', '게임에서 승리하여 게임을 나갔습니다.');
             map.delete(j);
             socket.broadcast.emit('delete', j);
         }
-        socket.disconnect();
     });
     socket.on('lose', e => {
         socket.emit('message', '패배하셨습니다.');
         for(let j of socket.rooms){
             socket.leave(j);
+            socket.emit('close', '게임에서 패배하여 게임을 나갔습니다.');
             map.delete(j);
             socket.broadcast.emit('delete', j);
         }
-        socket.disconnect();
     });
     socket.on('tac', e => {
         let room = '';

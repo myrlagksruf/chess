@@ -3,22 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
     <title>Document</title>
     <style>
         body{
             margin: 0;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+        #container{
+            display: inline-block;
         }
         #container > div > div{
             display: inline-block;
-            height: 80px;
-            width: 80px;
+            height: min(calc(100vw / 8), calc((100vh - 87px) / 8));
+            width: min(calc(100vw / 8), calc((100vh - 87px) / 8));
+        }
+        .full #container > div > div{
+            height: calc(100vmin / 8);
+            width: calc(100vmin / 8);
         }
         #menu.room{
             display: none;
         }
         #menu.room ~ #main{
             display: block;
+            text-align: center;
+        }
+        h1{
+            text-align: center;
         }
         #main{
             display: none;
@@ -34,7 +52,7 @@
             position: relative;
             background-image: url("./img/Chess_Pieces_Sprite.svg");
             height: 100%;
-            background-size: auto 160px;
+            background-size: auto 200%;
             background-repeat: no-repeat;
             z-index: 100;
         }
@@ -56,41 +74,43 @@
             z-index:-1;
         }
         [data-piece="e"], [data-piece="e"]::before{
-            background-position-x: 80px;
+            background-position-x: -20%;
         }
         [data-piece="k"], [data-piece="k"]::before, [data-piece="K"], [data-piece="K"]::before{
             background-position-x: 0;
         }
         [data-piece="q"], [data-piece="q"]::before, [data-piece="Q"], [data-piece="Q"]::before{
-            background-position-x: -80px;
+            background-position-x: 20%;
         }
         [data-piece="b"], [data-piece="b"]::before, [data-piece="B"], [data-piece="B"]::before{
-            background-position-x: -160px;
+            background-position-x: 40%;
         }
         [data-piece="n"], [data-piece="n"]::before, [data-piece="N"], [data-piece="N"]::before{
-            background-position-x: -240px;
+            background-position-x: 60%;
         }
         [data-piece="r"], [data-piece="r"]::before, [data-piece="R"], [data-piece="R"]::before{
-            background-position-x: -320px;
+            background-position-x: 80%;
         }
         [data-piece="p"], [data-piece="p"]::before, [data-piece="P"], [data-piece="P"]::before{
-            background-position-x: -400px;
+            background-position-x: 100%;
         }
         [data-piece="K"], [data-piece="K"]::before, [data-piece="Q"], [data-piece="Q"]::before, [data-piece="B"], [data-piece="B"]::before, [data-piece="N"], [data-piece="N"]::before, [data-piece="R"], [data-piece="R"]::before, [data-piece="P"], [data-piece="P"]::before{
             background-position-y: 0;
         }
         [data-piece="k"], [data-piece="k"]::before, [data-piece="q"], [data-piece="q"]::before, [data-piece="b"], [data-piece="b"]::before, [data-piece="n"], [data-piece="n"]::before, [data-piece="r"], [data-piece="r"]::before, [data-piece="p"], [data-piece="p"]::before{
-            background-position-y: -80px;
+            background-position-y: 100%;
         }
         #main > button{
             position: fixed;
             right:0;
             top:0;
         }
+        .full h1, .full #out{
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <h1><span>체스의 세계에 오신걸 환영합니다~~~</span><span></span></h1>
     <div id="menu">
         <button>방 새로 만들기</button>
         <table>
@@ -108,6 +128,8 @@
         <div id="container"></div>
         <button id="out">방에서 나가기</button>
     </div>
+    <div id="log"></div>
+    <h1><span>체스의 세계에 오신걸 환영합니다~~~</span><span></span></h1>
     <audio id="tac" src="./img/tac.mp3"></audio>
     <audio id="coin" src="./img/coin.mp3"></audio>
     <script src="/node_modules/socket.io/client-dist/socket.io.min.js"></script>
