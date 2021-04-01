@@ -185,18 +185,4 @@ io.on('connection', socket => {
         console.log(player);
         roomOut(socket, rooms, {player, mes:'상대방의 인터넷이 끊겼습니다.'});
     });
-    // socket.on('disconnect', e => {
-    //     const room = map.get(id);
-    //     map.delete(id);
-    //     const xxx = rooms.get(room);
-    //     socket.to(room).emit('close', '상대방이 게임을 나갔습니다.');
-    //     socket.broadcast.emit('delete', room);
-    //     if(xxx){
-    //         for(let i of xxx){
-    //             io.of('/').sockets.get(i).disconnect();
-    //             map.delete(i);
-    //         }
-    //     }
-    //     map.delete(room);
-    // });
 });

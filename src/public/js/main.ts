@@ -65,7 +65,6 @@ container.addEventListener('click', e => {
                 const posStart = getPos(sel.dataset.pos, cur.player);
                 const posEnd = getPos(tar.dataset.pos, cur.player);
                 const eat = cur.movePiece(posStart, posEnd);
-                console.log(eat);
                 if (eat) {
                     coin.play();
                 }

@@ -141,7 +141,6 @@ export class Chess implements ChessInter {
                 i.dataset.piece = this.getPiece(pos[0], 7 - pos[1]).v;
             }
         }
-        console.log(this.str);
     }
     moveGenerator(posStart:string):Set<string> {
         const [x, y] = Chess.getPos(posStart);
@@ -261,8 +260,12 @@ export class Chess implements ChessInter {
                             e.push(this.getPiece(i, y2).v === 'e');
                         }
                         start = x > x2 ? x2 : x;
+                        console.log(`start : ${start}`);
                         for (let i = 0; i < 3; i++) {
-                            e.push(!this.isCheck(start + i, y2));
+                            e.push(!this.isCheck(start + i, y2, flag));
+                            if(this.isCheck(start + i, y2, flag)){
+                                console.log(start + i, y2);
+                            }
                         }
                         if (e.every(v => v)) {
                             set.add(posEnd);
@@ -275,13 +278,61 @@ export class Chess implements ChessInter {
             const cur = new Chess(this.str);
             cur.movePiece(posStart, i);
             const xy = cur.king[flag];
-            if (cur.isCheck(xy[0], xy[1]))
+            if (cur.isCheck(xy[0], xy[1], flag))
                 set.delete(i);
         }
         return set;
     }
-    isCheck(x:number, y:number) {
-        return false;
+    makeCheck(x:number, y:number, flag:number){
+        const set = new Set<string>();
+        const knight = [-17, -15, -10, -6, 6, 10, 15, 17];
+        for (let i of knight) {
+            const temp = this.getPiece(x, y, i);
+            if (!temp.v.search(/n/i) &&
+                !temp.v.search(Chess.op[flag]) &&
+                Math.abs(temp.end[0] - x) + Math.abs(temp.end[1] - y) === 3) {
+                set.add(Chess.getAxis(...temp.ori));
+            }
+        }
+        const rook = [-8, -1, 1, 8, -9, -7, 7, 9];
+        const reg = [/[rq]/i, /[bq]/i];
+        const g = [1, 2];
+        for(let p = 0; p < 8; p++){
+            const i = rook[p];
+            let xy = [x, y];
+
+            const temp = this.getPiece(xy[0], xy[1], i);
+            if(!temp.v.search(/k/i) &&
+            !temp.v.search(Chess.op[flag]) &&
+            Math.abs(temp.end[0] - xy[0]) + Math.abs(temp.end[1] - xy[1]) <= 2){
+                set.add(Chess.getAxis(...temp.ori));
+                continue;
+            }
+
+            while(true){
+                const temp = this.getPiece(xy[0], xy[1], i);
+                if(!temp.v.search(reg[Math.floor(p / 4)]) &&
+                !temp.v.search(Chess.op[flag]) && 
+                Math.abs(temp.end[0] - xy[0]) + Math.abs(temp.end[1] - xy[1]) === g[Math.floor(p / 4)]){
+                    set.add(Chess.getAxis(...temp.ori));
+                    break;
+                }
+                else if(temp.v !== 'e'){
+                    break;
+                }
+                xy[0] = temp.end[0];
+                xy[1] = temp.end[1];
+            }
+        }
+        if(set.size) console.log(set);
+        return set;
+    }
+    isCheck(x:number, y:number, flag:number) {
+        const check = this.makeCheck(x, y, flag);
+        if(check.size)
+            return true;
+        else 
+            return false;
     }
     isWin(eat:string):string{
         if(eat === 'k') return 'white';
