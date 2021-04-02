@@ -4,6 +4,7 @@ const container = document.querySelector('#container') as HTMLDivElement;
 const menu = document.querySelector('#menu') as HTMLDivElement;
 const tac = document.querySelector('#tac') as HTMLAudioElement;
 const coin = document.querySelector('#coin') as HTMLAudioElement;
+const check = document.querySelector('#check') as HTMLAudioElement;
 const newButton = document.querySelector('#menu button') as HTMLButtonElement;
 const out = document.querySelector('#out') as HTMLButtonElement;
 const first = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -27,13 +28,24 @@ const getPos = (pos:string, type:string) => {
     }
     return pos;
 };
-const isWin = (eat:string) => {
+const whoIsWin = (eat:string) => {
     if(eat === 'black' || eat === 'white'){
         if(cur.player === eat[0]){
             socket.emit('win');
         } else {
             socket.emit('lose');
         }
+    }
+};
+
+const soundControl = info => {
+    if (info.blackCheck || info.whiteCheck) {
+        check.play();
+    }
+    else if(info.eat) {
+        coin.play();
+    } else {
+        tac.play();
     }
 };
 
@@ -61,18 +73,13 @@ container.addEventListener('click', e => {
     if (tar.dataset.piece && tar.dataset.pos && (wait && tar.classList.contains('chess') && (par.classList.contains('pick') || cur.isMove(tar.dataset.piece))) && cur.isPlayer()) {
         if (par.classList.contains('pick')) {
             const sel = document.querySelector('div.sel') as HTMLDivElement;
-            if (tar !== sel && tar.classList.contains('active') && sel.dataset.pos) {
+            if (tar !== sel && sel.dataset.pos && cur.moveGenerator(getPos(sel.dataset.pos, cur.player)).has(getPos(tar.dataset.pos, cur.player))) {
                 const posStart = getPos(sel.dataset.pos, cur.player);
                 const posEnd = getPos(tar.dataset.pos, cur.player);
-                const eat = cur.movePiece(posStart, posEnd);
-                if (eat) {
-                    coin.play();
-                }
-                else {
-                    tac.play();
-                }
-                socket.emit('tac', {str: cur.str, eat});
-                isWin(eat);
+                const info = cur.movePiece(posStart, posEnd);
+                soundControl(info);
+                socket.emit('tac', {str: cur.str, info});
+                whoIsWin(info.isWin);
                 cur.renderAll();
             }
             const obj = {
@@ -187,13 +194,8 @@ socket.on('set', e => {
 });
 socket.on('tac', e => {
     cur.fen = e.str;
-    isWin(e.eat);
-    if (e.eat) {
-        coin.play();
-    }
-    else {
-        tac.play();
-    }
+    whoIsWin(e.info.isWin);
+    soundControl(e.info);
     cur.renderAll();
 });
 socket.on('message', e => {
@@ -206,4 +208,8 @@ const fulltoggle = e => {
     document.body.classList.toggle('full');
 };
 
-window.addEventListener('dblclick', fulltoggle);
+window.addEventListener('dblclick', e => {
+    const tar = e.target as HTMLDivElement;
+    if(!tar.classList.contains('chess'))
+        fulltoggle(e);
+});

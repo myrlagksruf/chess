@@ -307,6 +307,12 @@ export class Chess implements ChessInter {
             Math.abs(temp.end[0] - xy[0]) + Math.abs(temp.end[1] - xy[1]) <= 2){
                 set.add(Chess.getAxis(...temp.ori));
                 continue;
+            } else if(!temp.v.search(/p/i) &&
+            !temp.v.search(Chess.op[flag]) &&
+            i * flag > 0 &&
+            Math.abs(temp.end[0] - xy[0]) + Math.abs(temp.end[1] - xy[1]) === 2){
+                set.add(Chess.getAxis(...temp.ori));
+                continue;
             }
 
             while(true){
@@ -337,7 +343,7 @@ export class Chess implements ChessInter {
     isWin(eat:string):string{
         if(eat === 'k') return 'white';
         else if(eat === 'K') return 'black';
-        else return eat;
+        else return '';
     }
     movePiece(posStart:string, posEnd:string) {
         let flag = 1;
@@ -382,6 +388,11 @@ export class Chess implements ChessInter {
             this.move = 'b';
         this.pasang = pasang;
         this.str = Chess.dataToFen(this);
-        return this.isWin(eat);
+        return {
+            blackCheck: this.isCheck(...this.king['1'], 1),
+            whiteCheck: this.isCheck(...this.king['-1'], -1),
+            eat,
+            isWin: this.isWin(eat)
+        };
     }
 }
